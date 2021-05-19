@@ -1,3 +1,13 @@
+//This program is a red-black tree that allows for
+//insertion (through the console or a file) and display.
+//Author: Kevin Lei
+//Date: 5/18/2021
+//Used the following sites for algorithm help:
+//https://www.geeksforgeeks.org/red-black-tree-set-2-insert/
+//https://www.programiz.com/dsa/insertion-in-a-red-black-tree
+//https://iq.opengenus.org/red-black-tree-insertion/
+//https://www.cs.auckland.ac.nz/software/AlgAnim/red_black.html
+
 #include <iostream>
 #include <cstring>
 #include <fstream>
@@ -22,10 +32,10 @@ struct Node {
 void ADD(Node* & root);
 void READ(Node* & root);
 void insert(Node* & root, int newData);
-void insertFix(Node* & root, Node* & newNode);
+void insertFix(Node* & root, Node* & passedNode);
 Node* getUncle(Node* nephew);
-void leftRotate(Node* & root, Node* & parentNode);
-void rightRotate(Node* & root, Node* & parentNode);
+void leftRotate(Node* & root, Node* & passedNode);
+void rightRotate(Node* & root, Node* & passedNode);
 void PRINT(Node* root, int depth);
 
 int main() {
@@ -92,9 +102,9 @@ void insert(Node* & root, int newData) { //Inserts a number into the tree
 
   while (current != NULL) {
     parent = current;
-    if (newData < current->data) {
+    if (newData < current->data) { //go left
       current = current->left;
-    } else {
+    } else { //go right
       current = current->right;
     }
   }
@@ -103,7 +113,7 @@ void insert(Node* & root, int newData) { //Inserts a number into the tree
   newNode->data = newData;
   newNode->parent = parent;
 
-  if (parent == NULL) { //Case 1: Insert at root
+  if (parent == NULL) { //if number was inserted at root
     root = newNode;
     //root->color = BLACK;
     //return;
@@ -117,34 +127,43 @@ void insert(Node* & root, int newData) { //Inserts a number into the tree
   
 }
 
-void insertFix(Node* & root, Node* & newNode) { //Fixes the red-black tree after insertion
-  while (newNode->parent != NULL && newNode->parent->color != BLACK) { //Checks for Case 2: Parent is black
+void insertFix(Node* & root, Node* & passedNode) { //Fixes the red-black tree after insertion
+  Node* newNode = passedNode;
+  while (newNode->parent != NULL && newNode->parent->color != BLACK) { //Checks for Case 1 or 2: Insert at root or parent is black
     if (newNode->parent == newNode->parent->parent->left) {
       if (getUncle(newNode) != NULL && getUncle(newNode)->color == RED) { //Case 3: Parent and uncle are red
+	//Make parent and uncle black, make grandparent red. Check grandparent.
 	newNode->parent->color = BLACK;
 	getUncle(newNode)->color = BLACK;
 	newNode->parent->parent->color = RED;
 	newNode = newNode->parent->parent;
       } else /*if (getUncle(newNode) != NULL && getUncle(newNode)->color == RED)*/ {
-	if (newNode == newNode->parent->right) {
+	if (newNode == newNode->parent->right) { //Case 4a: Uncle is black, parent is a left node, newNode is a right node
+	  //Perform rotation through parent, call Case 5a
 	  newNode = newNode->parent;
 	  leftRotate(root, newNode);
 	}
-        newNode->parent->color = BLACK;
+	//Case 5a: Uncle is black, parent is a left node, newNode is a left node
+	//Switch parent and grandparent colors, perform rotation through grandparent
+        newNode->parent->color = BLACK; 
 	newNode->parent->parent->color = RED;
 	rightRotate(root, newNode->parent->parent);
       }
     } else {
-      if (getUncle(newNode) != NULL && getUncle(newNode)->color == RED) {
+      if (getUncle(newNode) != NULL && getUncle(newNode)->color == RED) {  //Case 3: Parent and uncle are red
+	//Make parent and uncle black, maje grandparent red. Check grandparent.
 	newNode->parent->color = BLACK;
 	getUncle(newNode)->color = BLACK;
 	newNode->parent->parent->color = RED;
 	newNode = newNode->parent->parent;
       } else /*if (getUncle(newNode) != NULL && getUncle(newNode)->color == RED)*/ {
-	if (newNode == newNode->parent->left) {
+	if (newNode == newNode->parent->left) {  //Case 4b: Uncle is black, parent is a right node, newNode is a left node
+	  //Perform rotation through parent, call Case 5b
 	  newNode = newNode->parent;
 	  rightRotate(root, newNode);
 	}
+	//Case 5b: Uncle is black, parent is a right node, newNode is a right node
+	//Switch parent and grandparent colors, perform rotation through grandparent
 	newNode->parent->color = BLACK;
 	newNode->parent->parent->color = RED;
 	leftRotate(root, newNode->parent->parent);
@@ -152,7 +171,8 @@ void insertFix(Node* & root, Node* & newNode) { //Fixes the red-black tree after
     }
     root->color = BLACK;
   }
-  root->color = BLACK;
+  root->color = BLACK; //Case 1: Insert at root
+  
   /*if (newNode->parent->color == BLACK || newNode == root){ //Case 2: Parent is black
     return;
   } else if (newNode->parent->color == RED
@@ -193,9 +213,10 @@ void insertFix(Node* & root, Node* & newNode) { //Fixes the red-black tree after
     newNode->parent->color = grandparentColor;
     newNode->parent->left->color = parentColor;
   }*/
+  
 }
 
-Node* getUncle(Node* nephew) {
+Node* getUncle(Node* nephew) { //Function that returns the uncle (left or right) of a node
   if (nephew->parent == nephew->parent->parent->left) {
     return nephew->parent->parent->right;
   } else {
@@ -203,7 +224,8 @@ Node* getUncle(Node* nephew) {
   }
 }
 
-void leftRotate(Node* & root, Node* & parentNode) {
+void leftRotate(Node* & root, Node* & passedNode) { //Function that performs a left rotation
+  Node* parentNode = passedNode;
   Node* childNode = parentNode->right;
   parentNode->right = childNode->left;
   if (childNode->left != NULL) {
@@ -223,7 +245,8 @@ void leftRotate(Node* & root, Node* & parentNode) {
   parentNode->parent = childNode;
 }
 
-void rightRotate(Node* & root, Node* & parentNode) {
+void rightRotate(Node* & root, Node* & passedNode) { //Function that performs a right rotation
+  Node* parentNode = passedNode;
   Node* childNode = parentNode->left;
   parentNode->left = childNode->right;
   if (childNode->right != NULL) {
@@ -245,7 +268,7 @@ void rightRotate(Node* & root, Node* & parentNode) {
 
 void PRINT(Node* root, int depth) { //Displays the tree nicely
   if (root != NULL) {
-    if (root->right != NULL) {
+    if (root->right != NULL) { //Displays right subtree
       PRINT(root->right, depth + 1);
     }
     
@@ -253,7 +276,8 @@ void PRINT(Node* root, int depth) { //Displays the tree nicely
       cout << "             ";
     }
 
-    if (root->color == BLACK) {
+    //Prints node's info (color, data, parent)
+    if (root->color == BLACK) { 
       cout << root->data << "(p: ";
       if (root->parent == NULL) {
 	cout << "NULL)" << endl;
@@ -269,7 +293,7 @@ void PRINT(Node* root, int depth) { //Displays the tree nicely
       }
     }
 
-    if (root->left != NULL) {
+    if (root->left != NULL) { //Displays left subtree
       PRINT(root->left, depth + 1);
     }
   }
