@@ -87,8 +87,9 @@ void READ(Node* & root) { //Inputs numbers through a file
   ifstream file;
   srand(time(0));
   file.open(fileName);
-  if (file == NULL) {
+  if (!file) {
     cout << fileName << " could not be accessed" << endl;
+    exit(1);
   } else {
     while (file >> data) {
       insert(root, atoi(data));
